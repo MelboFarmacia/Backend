@@ -6,6 +6,12 @@ const notificationSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
+  ubicacion: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Ubicacion',
+    required: true,
+    index: true // Índice para búsquedas por ubicación
+  },
   type: {
     type: String,
     enum: ['stock-low', 'expired', 'expiring-soon', 'out-of-stock'],
@@ -30,7 +36,8 @@ const notificationSchema = new mongoose.Schema({
   }
 });
 
-// Asegurarnos de que el índice TTL esté creado
+// Asegurarnos de que los índices estén creados
 notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 7 });
+notificationSchema.index({ ubicacion: 1, type: 1 }); // Índice compuesto para búsquedas frecuentes
 
-export const Notification = mongoose.model('Notification', notificationSchema); 
+export const Notification = mongoose.model('Notification', notificationSchema);

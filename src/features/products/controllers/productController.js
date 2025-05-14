@@ -5,7 +5,23 @@ import ExcelJS from 'exceljs';
 
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const { role, ubicacion } = req.user;
+    const { location } = req.query; // Permitir filtrar por ubicación desde el frontend
+    
+    let query = {};
+    
+    // Si no es admin, solo puede ver productos de su ubicación
+    if (role !== 'admin') {
+      query.location = ubicacion;
+    } 
+    // Si es admin y especifica ubicación(es), filtrar por ellas
+    else if (location) {
+      query.location = location.includes(',') 
+        ? { $in: location.split(',') }
+        : location;
+    }
+    
+    const products = await Product.find(query).populate('location', 'nombre');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener productos' });

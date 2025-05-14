@@ -28,7 +28,8 @@ const createInitialUser = async () => {
       username: 'admin',
       email: 'admin@farmacia.com',
       password: hashedPassword,
-      role: 'admin'
+      role: 'admin',
+      ubicacion: '680b8acc93df9890caa65f4f'  
     });
     
     console.log('Usuario admin creado exitosamente');

@@ -1,11 +1,12 @@
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
 import Report from '../../reports/models/Report.js';
 
-export const getWeeklyEarnings = async () => {
+export const getWeeklyEarnings = async (ubicacion) => {
   const start = startOfWeek(new Date());
   const end = endOfWeek(new Date());
   
   const reports = await Report.find({
+    ubicacion,
     startDate: { $gte: start },
     endDate: { $lte: end }
   });
@@ -13,12 +14,12 @@ export const getWeeklyEarnings = async () => {
   return reports.reduce((total, report) => total + report.totalSales, 0);
 };
 
-export const getPreviousWeekEarnings = async () => {
+export const getPreviousWeekEarnings = async (ubicacion) => {
   const start = startOfWeek(subWeeks(new Date(), 1));
-  //console.log(start)
   const end = endOfWeek(subWeeks(new Date(), 1));
   
   const reports = await Report.find({
+    ubicacion,
     startDate: { $gte: start },
     endDate: { $lte: end }
   });
@@ -27,11 +28,12 @@ export const getPreviousWeekEarnings = async () => {
   return reports.reduce((total, report) => total + report.totalSales, 0);
 };
 
-export const getMonthlyEarnings = async () => {
+export const getMonthlyEarnings = async (ubicacion) => {
   const start = startOfMonth(new Date());
   const end = endOfMonth(new Date());
   
   const reports = await Report.find({
+    ubicacion,
     startDate: { $gte: start },
     endDate: { $lte: end }
   });
@@ -39,11 +41,12 @@ export const getMonthlyEarnings = async () => {
   return reports.reduce((total, report) => total + report.totalSales, 0);
 };
 
-export const getPreviousMonthEarnings = async () => {
+export const getPreviousMonthEarnings = async (ubicacion) => {
   const start = startOfMonth(subMonths(new Date(), 1));
   const end = endOfMonth(subMonths(new Date(), 1));
   
   const reports = await Report.find({
+    ubicacion,
     startDate: { $gte: start },
     endDate: { $lte: end }
   });
@@ -51,18 +54,20 @@ export const getPreviousMonthEarnings = async () => {
   return reports.reduce((total, report) => total + report.totalSales, 0);
 };
 
-export const getFifteenDaysEarnings = async () => {
+export const getFifteenDaysEarnings = async (ubicacion) => {
   const now = new Date();
   const start = startOfMonth(now);
   const middle = new Date(now.getFullYear(), now.getMonth(), 15);
   const end = endOfMonth(now);
 
   const firstHalfReports = await Report.find({
+    ubicacion,
     startDate: { $gte: start },
     endDate: { $lte: middle }
   });
 
   const secondHalfReports = await Report.find({
+    ubicacion,
     startDate: { $gt: middle },
     endDate: { $lte: end }
   });
@@ -75,4 +80,4 @@ export const getFifteenDaysEarnings = async () => {
     firstHalf: (firstHalfTotal / monthTotal) * 100 || 0,
     secondHalf: (secondHalfTotal / monthTotal) * 100 || 0
   };
-}; 
+};

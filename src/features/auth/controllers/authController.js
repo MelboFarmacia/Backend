@@ -5,6 +5,7 @@ import User from '../models/User.js';
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(email, password)
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -17,7 +18,11 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { 
+        userId: user._id, 
+        role: user.role,
+        ubicacion: user.ubicacion
+      },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -28,7 +33,8 @@ export const login = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
-        name: user.name
+        name: user.name,
+        ubicacion: user.ubicacion
       }
     });
   } catch (error) {
@@ -44,10 +50,11 @@ export const defaultUser = async () => {
       email: 'admin@gmail.com',
       password: adminPassword,
       role: 'admin',
+      ubicacion: '680b8acc93df9890caa65f4f'
     };
     let user = new User(data);
     await user.save();
-    return console.log('Updated user', data);
+    return console.log('Updated user', data); 
   } catch (err) {
     console.error(err);
   }

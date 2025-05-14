@@ -1,4 +1,3 @@
-// backend/src/index.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -13,6 +12,8 @@ import Report from './features/reports/models/Report.js';
 import notificationRoutes from './features/notifications/routes/notificationRoutes.js';
 import statsRoutes from './features/stats/routes/statsRoutes.js';
 import ubicacionRoutes from './features/products/routes/ubicacionRoutes.js';
+import promotionRoutes from './features/promotions/routes/promotionRoutes.js';
+import userRoutes from './features/auth/routes/userRoutes.js';
 // Cargar variables de entorno
 dotenv.config();
 
@@ -35,6 +36,8 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/ubicaciones', ubicacionRoutes);
+app.use('/api/promotions', promotionRoutes);
+app.use('/api/users', userRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
@@ -59,27 +62,34 @@ const handleReports = async () => {
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Buscar reporte activo para hoy
-    const activeReport = await Report.findOne({ 
-      status: 'active',
-      startDate: {
-        $gte: startOfDay,
-        $lte: endOfDay
-      }
-    });
+    // Obtener todas las ubicaciones disponibles
+    const ubicaciones = await mongoose.connection.db.collection('ubicacions').find().toArray();
+    console.log('Ubicaciones disponibles:', ubicaciones); 
 
-    // Si no hay reporte activo para hoy, crear uno nuevo
-    if (!activeReport) {
-      console.log('Creando nuevo reporte para el día actual');
-      const report = new Report({
-        startDate: now,
-        endDate: endOfDay,
-        sales: [],
-        totalSales: 0,
-        totalProducts: 0,
-        status: 'active'
+    // Crear un reporte para cada ubicación si no existe
+    for (const ubicacion of ubicaciones) {
+      const activeReport = await Report.findOne({
+        status: 'active',
+        startDate: {
+          $gte: startOfDay,
+          $lte: endOfDay
+        },
+        ubicacion: ubicacion._id
       });
-      await report.save();
+
+      if (!activeReport) {
+        console.log(`Creando nuevo reporte para ubicación: ${ubicacion.nombre}`);
+        const report = new Report({
+          ubicacion: ubicacion._id,
+          startDate: now,
+          endDate: endOfDay,
+          sales: [],
+          totalSales: 0,
+          totalProducts: 0, 
+          status: 'active'
+        });
+        await report.save();
+      }
     }
   } catch (error) {
     console.error('Error manejando reportes:', error);

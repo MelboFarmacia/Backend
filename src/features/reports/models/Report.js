@@ -30,6 +30,49 @@ const saleItemSchema = new mongoose.Schema({
   subtotal: {
     type: Number,
     required: true
+  },
+  appliedPromotion: {
+    promotionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Promotion'
+    },
+    name: String,
+    type: {
+      type: String,
+      enum: ['NxM', 'percentage', 'fixed']
+    },
+    discountValue: Number,
+    discountAmount: Number
+  }
+});
+
+const paymentSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['transferencia', 'TC', 'efectivo'],
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true
+  },
+  isDivided: {
+    type: Boolean,
+    default: false
+  },
+  paymentDetails: {
+    efectivo: {
+      type: Number,
+      default: 0
+    },
+    TC: {
+      type: Number,
+      default: 0
+    },
+    transferencia: {
+      type: Number,
+      default: 0
+    }
   }
 });
 
@@ -39,10 +82,46 @@ const saleSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  paymentType: { 
-    type: String,
-    enum: ['transferencia', 'TC', 'efectivo'],
-    required: true
+  totalDiscount: {
+    type: Number,
+    default: 0
+  },
+  appliedPromotions: [{
+    promotionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Promotion'
+    },
+    name: String,
+    type: {
+      type: String,
+      enum: ['NxM', 'percentage', 'fixed']
+    },
+    discountValue: Number,
+    discountAmount: Number
+  }],
+  payments: {
+    type: [paymentSchema],
+    required: true,
+    validate: {
+      validator: function(payments) {
+        return payments && payments.length > 0;
+      },
+      message: 'Debe haber al menos un método de pago'
+    }
+  },
+  totalsByPaymentType: {
+    efectivo: {
+      type: Number,
+      default: 0
+    },
+    TC: {
+      type: Number,
+      default: 0
+    },
+    transferencia: {
+      type: Number,
+      default: 0
+    }
   },
   createdAt: {
     type: Date,
@@ -51,7 +130,13 @@ const saleSchema = new mongoose.Schema({
 });
 
 const reportSchema = new mongoose.Schema({
-  startDate: {
+  ubicacion: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Ubicacion',
+    required: true,
+    index: true
+  },
+  startDate: {  
     type: Date,
     required: true
   },
@@ -78,10 +163,7 @@ const reportSchema = new mongoose.Schema({
       subtotal: Number
     }],
     total: Number,
-    paymentType: {
-      type: String,
-      enum: ['transferencia', 'TC', 'efectivo']
-    },
+    payments: [paymentSchema],
     createdAt: {
       type: Date,
       default: Date.now

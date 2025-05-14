@@ -12,6 +12,7 @@ import {
 
 export const getTopSellingProducts = async (req, res) => {
   try {
+    const { ubicacion, role } = req.user;
     const { period = 'day' } = req.query;
     let startDate;
     const endDate = endOfDay(new Date());
@@ -27,10 +28,17 @@ export const getTopSellingProducts = async (req, res) => {
         startDate = startOfDay(new Date());
     }
 
-    const reports = await Report.find({
+    const query = {
       startDate: { $gte: startDate },
       endDate: { $lte: endDate }
-    });
+    };
+
+    // Solo aplicar filtro de ubicación si no es admin
+    if (role !== 'admin') {
+      query.ubicacion = ubicacion;
+    }
+
+    const reports = await Report.find(query);
 
     // Agrupar ventas por producto
     const productStats = {};
@@ -76,13 +84,21 @@ export const getTopSellingProducts = async (req, res) => {
 
 export const getMonthlySalesStats = async (req, res) => {
   try {
+    const { ubicacion, role } = req.user;
     const startDate = startOfYear(new Date());
     const endDate = endOfYear(new Date());
     
-    const reports = await Report.find({
+    const query = {
       startDate: { $gte: startDate },
       endDate: { $lte: endDate }
-    });
+    };
+
+    // Solo aplicar filtro de ubicación si no es admin
+    if (role !== 'admin') {
+      query.ubicacion = ubicacion;
+    }
+    
+    const reports = await Report.find(query);
 
     // Crear array con todos los meses del año
     const monthsData = eachMonthOfInterval({
@@ -112,17 +128,27 @@ export const getMonthlySalesStats = async (req, res) => {
 
 export const getProductsSalesStats = async (req, res) => {
   try {
+    const { ubicacion, role } = req.user;
     const currentDate = new Date();
     const startDate = startOfMonth(currentDate);
     const endDate = endOfMonth(currentDate);
     
-    const products = await Product.find();
-    const reports = await Report.find({
+    const productQuery = role === 'admin' ? {} : { location: ubicacion };
+    const products = await Product.find(productQuery);
+
+    const reportQuery = {
       createdAt: {
         $gte: startDate,
         $lte: endDate
       }
-    });
+    };
+
+    // Solo aplicar filtro de ubicación si no es admin
+    if (role !== 'admin') {
+      reportQuery.ubicacion = ubicacion;
+    }
+
+    const reports = await Report.find(reportQuery);
     
     const productStats = {};
 
@@ -182,6 +208,7 @@ export const getProductsSalesStats = async (req, res) => {
 
 export const getEarningsStats = async (req, res) => {
   try {
+    const { ubicacion } = req.user;
     const [
       weeklyEarnings,
       monthlyEarnings,
@@ -189,11 +216,11 @@ export const getEarningsStats = async (req, res) => {
       previousMonthEarnings,
       fifteenDaysStats
     ] = await Promise.all([
-      getWeeklyEarnings(),
-      getMonthlyEarnings(),
-      getPreviousWeekEarnings(),
-      getPreviousMonthEarnings(),
-      getFifteenDaysEarnings()
+      getWeeklyEarnings(ubicacion),
+      getMonthlyEarnings(ubicacion),
+      getPreviousWeekEarnings(ubicacion),
+      getPreviousMonthEarnings(ubicacion),
+      getFifteenDaysEarnings(ubicacion)
     ]);
 
     res.json({
