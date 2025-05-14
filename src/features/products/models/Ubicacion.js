@@ -6,7 +6,7 @@ const ubicacionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    direccion: {
+    direccion: { 
         type: String,
         required: true,
         index: true

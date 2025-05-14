@@ -11,19 +11,21 @@ import {
 } from '../controllers/reportController.js';
 import { generateReportPDF } from '../controllers/pdfController.js';
 import { generateReportExcel } from '../controllers/excelController.js';
+import { verifyToken, checkRole, checkUbicacion } from '../../../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/create', createDailyReport);
-router.post('/add-sale', addSaleToReport);
-router.post('/close', closeCurrentReport);
-router.get('/current', getCurrentReport);
-router.get('/history', getReportHistory);
-router.post('/generate-pdf', generateReportPDF);
-router.get('/by-date/:date', getReportByDate);
-router.get('/generate-excel/:reportId', generateReportExcel);
-router.get('/generate-excel', generateReportExcel); // Nueva ruta sin parámetros para el rango
-router.get('/daily-stats', getDailySalesStats);
-router.get('/by-range', getReportsByRange);
+// Rutas protegidas con autenticación y ubicación
+router.post('/create', verifyToken, checkUbicacion, createDailyReport);
+router.post('/add-sale', verifyToken, checkUbicacion, addSaleToReport);
+router.post('/close', verifyToken, checkRole(['admin', 'admin_ubicacion']), checkUbicacion, closeCurrentReport);
+router.get('/current', verifyToken, checkUbicacion, getCurrentReport);
+router.get('/history', verifyToken, checkUbicacion, getReportHistory);
+router.post('/generate-pdf', verifyToken, checkUbicacion, generateReportPDF);
+router.get('/by-date/:date', verifyToken, checkUbicacion, getReportByDate);
+router.get('/generate-excel/:reportId', verifyToken, checkUbicacion, generateReportExcel);
+router.get('/generate-excel', verifyToken, checkUbicacion, generateReportExcel);
+router.get('/daily-stats', verifyToken, checkUbicacion, getDailySalesStats);
+router.get('/by-range', verifyToken, checkUbicacion, getReportsByRange);
 
 export default router;

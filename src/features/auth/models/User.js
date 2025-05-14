@@ -14,9 +14,17 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'employee'],
+    enum: ['admin', 'admin_ubicacion', 'employee'],
     default: 'employee',
     index: true, // Agregar índice para búsquedas por rol
+  },
+  ubicacion: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Ubicacion',
+    required: function() {
+      return this.role === 'employee' || this.role === 'admin_ubicacion';
+    },
+    index: true, // Agregar índice para búsquedas por ubicación
   },
 });
 
